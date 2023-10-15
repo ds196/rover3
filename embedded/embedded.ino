@@ -1,8 +1,8 @@
 /*****************************************************
  * Rover 3 *A.S.T.R.A.
  * PICO CODE
- * v0.3.5
- * 10/14/23
+ * v0.3.6
+ * 10/15/23
  *****************************************************/
 
 /* Notes:
@@ -51,10 +51,10 @@
 #define SERVO_2_PIN    11 // "
 #define SERVO_3_PIN    12 // "
 #define SERVO_4_PIN    13 //High Torque Servo
-#define MOTOR_IN1_PIN  14 //Named "MOTOR_AIN1_IO" on schematic
-#define MOTOR_IN2_PIN  15 // "
-#define MOTOR_PWM_PIN  16 //Motor Controller PWM
-#define MOTOR_STBY_PIN 17 //Motor stby pin
+#define MOTOR_IN2_PIN  14 //Named "MOTOR_AIN2_IO" on schematic
+#define MOTOR_PWM_PIN  15 //Motor Controller PWM
+#define MOTOR_STBY_PIN 16 //Motor stby pin
+#define MOTOR_IN1_PIN  17 //Named "MOTOR_AIN1_IO" on schematic
 //#define LED_PWM_PIN    18 //NOT PLUGGED IN! 
 #define LED_PIN        25 //On-board LED
 
