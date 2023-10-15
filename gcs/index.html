@@ -17,7 +17,7 @@
     <script src="jquery.js"></script>
 
     <!-- JAVASCRIPT -->
-    <script src="groundstation.js"></script>
+    <script src="gcs.js"></script>
 
     <!-- CSS -->
     <style>
@@ -52,7 +52,7 @@
         <h1 style="color: white; text-align: center;"><b>Controls</b></h1>
         <div class="row p-3">
             <div class="card" style="width:18rem;">
-                <div class="card-body">
+                <div class="card-body"  id="cardbody-picoManualCommand">
                 <body>
                     <h1>Send to Pico</h1>                
                     <textarea style="text-align: center;" id="txt-picoManualCommand" rows="2" cols="20"></textarea>
@@ -126,11 +126,11 @@ Direction: clockwiseee</textarea>
                 <div class="card-body">
                 <body>
                     <h1>T&P Sensor</h1>
-                    
                     <textarea id="txt-tpSensorData" rows="3" cols="17"
 >Temp: 1000
 Pressure: 1000
 Approx. Alt: 1000</textarea>
+                    <button type="button" id="btn-updateTP" class="btn btn-dark">Update</button>
                 </body>
                 </div>
             </div>
@@ -141,10 +141,10 @@ Approx. Alt: 1000</textarea>
                 <div class="card-body">
                 <body>
                     <h1>IMU Sensor</h1>
-                    
                     <textarea id="txt-imuSensorData" rows="3" cols="17"
 >Position: 1000
 Orientation: 1000</textarea>
+                    <button type="button" id="btn-updateTP" class="btn btn-dark">Update</button>
                 </body>
                 </div>
             </div>

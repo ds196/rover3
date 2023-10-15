@@ -5,7 +5,7 @@
 // One subscriber, parse text into boxes, make sure its being processed line by line - .split to separate, 
 
 
-var allSpeed = $("#allSpeed"); // $(#id)
+/*var allSpeed = $("#allSpeed"); // $(#id)
 var imusensor = document.getElementById("imuSensorData");
 var temp = document.getElementById("tempData");
 var pressure = document.getElementById("pressureData");
@@ -20,7 +20,7 @@ var outServo2 = 90;
 var outServo3 = 90;
 var outServo4 = 90;
 var outMotorS = 1; // 0-255
-var outMotorD = 1;
+var outMotorD = 1;*/
 
 // Connecting ROS + ros_bridge
 var ros = new ROSLIB.Ros({
@@ -67,17 +67,21 @@ $("document").ready(() => {
     });
 
 
-    /*$("#btn-submitAllSpeed").click(() => {
+    /*$("#btn-submitAllSpeed").on("click", () => {
         commandPub.publish({
             data: "setallservos " + $("#allSpeed").val().trim()
         });
         //console.log("button pushed");
     });*/
 
-    $("#btn-picoManualCommand").click(() => {
+    $("#btn-picoManualCommand").on("click", () => {
         commandPub.publish({
             data: $("#txt-picoManualCommand").val().trim()
         });
+    });
+
+    $("#cardbody-picoManualCommand").on("keydown", (event) => {
+        console.log(event);
     });
 });
 
