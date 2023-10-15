@@ -47,9 +47,20 @@
 <h1>Helloworld!</h1>
 <div class="row">
     
-    <!-- CONTROLS SECTION-->
-    <div class="col-8" style="background-color:yellow;">
-        <h1 style="text-align: center;">Controls</h1>
+    <!-- CONTROLS SECTION -->
+    <div class="col-8">
+        <h1 style="color: white; text-align: center;"><b>Controls</b></h1>
+        <div class="row p-3">
+            <div class="card" style="width:18rem;">
+                <div class="card-body">
+                <body>
+                    <h1>Send to Pico</h1>                
+                    <textarea style="text-align: center;" id="txt-picoManualCommand" rows="2" cols="20"></textarea>
+                    <button type="button" id="btn-picoManualCommand" class="btn btn-dark">Send</button>
+                </body>
+                </div>
+            </div>
+        </div>
         <!--ROW 1-->
         <div class="row">
             <div class="col-6" style="background-color:pink;">
@@ -71,15 +82,72 @@
     </div>
     
     <!-- DATA SECTION -->
-    <div class="col-4" style="background-color:pink; border-left: 5px solid #333;">
-        <h1 style="text-align: center;">Data</h1>
-        <div class="card" style="width:15rem;">
-            <div class="card-body">
-            <body>
-                <h1>IMU Sensor</h1>
-                            
-                <textarea id="imuSensorData" name="IMUsensorData" rows="2" cols="15">90</textarea>
-            </body>
+    <div class="col-4" style="border-left: 5px solid #333;">
+        <h1 style="color: white;text-align: center;"><b>Data</b></h1>
+        <!--SERVO & MOTOR DATA ROW-->
+        <div class="row p-3">
+            <!--SERVO POS CARD-->
+            <div class="col p-3">
+            <div class="card" style="width:15rem;">
+                <div class="card-body">
+                <body>
+                    <h1>Servo Positions</h1>
+                    
+                    <!--These should probably be renamed later to "shoulder", "elbow", etc-->
+                    <textarea id="txt-servoPosData" rows="4" cols="17"
+>Servo 1: 500
+Servo 2: 500
+Servo 3: 500
+Servo 4: 500</textarea>
+                </body>
+                </div>
+            </div>
+            </div>
+            <!--MOTOR DATA CARD-->
+            <div class="col p-3">
+            <div class="card" style="width:15rem;">
+                <div class="card-body">
+                <body>
+                    <h1>Motor Mvmt</h1>
+                    
+                    <!--These should probably be renamed later to "shoulder", "elbow", etc-->
+                    <textarea id="txt-motorData" rows="2" cols="17"
+>Speed: 500stopped
+Direction: clockwiseee</textarea>
+                </body>
+                </div>
+            </div>
+            </div>
+        </div>
+        <!--SENSOR DATA ROW-->
+        <div class="row p-3">
+            <div class="col p-3">
+            <div class="card" style="width:15rem;">
+                <div class="card-body">
+                <body>
+                    <h1>T&P Sensor</h1>
+                    
+                    <textarea id="txt-tpSensorData" rows="3" cols="17"
+>Temp: 1000
+Pressure: 1000
+Approx. Alt: 1000</textarea>
+                </body>
+                </div>
+            </div>
+            </div>
+            <!--IMU SENSOR CARD-->
+            <div class="col p-3">
+            <div class="card" style="width:15rem;">
+                <div class="card-body">
+                <body>
+                    <h1>IMU Sensor</h1>
+                    
+                    <textarea id="txt-imuSensorData" rows="3" cols="17"
+>Position: 1000
+Orientation: 1000</textarea>
+                </body>
+                </div>
+            </div>
             </div>
         </div>
     </div>
