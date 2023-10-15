@@ -1,8 +1,8 @@
 /*****************************************************
  * Rover 3 *A.S.T.R.A.
  * PICO CODE
- * v0.3.3
- * 10/11/23
+ * v0.3.5
+ * 10/14/23
  *****************************************************/
 
 /* Notes:
@@ -42,9 +42,9 @@
 
 
 //Pins
-#define SD_TX_PIN       0 //UART TX to OpenLog RX
-#define SD_RX_PIN       1 //UART RX to OpenLog TX
-#define SD_RESET_PIN    2 //DTR/CTS??? DTR on schematic
+#define SD_RESET_PIN    0 //DTR/CTS??? DTR on schematic
+#define SD_TX_PIN       1 //UART TX to OpenLog RX
+#define SD_RX_PIN       2 //UART RX to OpenLog TX
 #define I2C_SDA_PIN     4 //I2C SDA
 #define I2C_SCL_PIN     5 //I2C SCL
 #define SERVO_1_PIN    10 //Metal Gear Servos
@@ -62,8 +62,8 @@
 
 //Predeclarations
 #define SEALEVELPRESSURE_HPA (1013.25)
-#define SERVO_MAX 2500
-#define SERVO_MIN  500
+const int SERVO_MIN =  500;
+const int SERVO_MAX = 2500;
 const int SERIAL_BAUD = 115200;
 // BNO
 double xPos = 0, yPos = 0, headingVel = 0;
@@ -106,10 +106,10 @@ void setup() {
 
   //Servos
   //******
-  if(SERVO1_ENABLED) servo1.attach(SERVO_1_PIN /*, SERVO_MIN, SERVO_MAX*/);
-  if(SERVO2_ENABLED) servo2.attach(SERVO_2_PIN);
-  if(SERVO3_ENABLED) servo3.attach(SERVO_3_PIN);
-  if(SERVO4_ENABLED) servo4.attach(SERVO_4_PIN);
+  if(SERVO1_ENABLED) servo1.attach(SERVO_1_PIN, SERVO_MIN, SERVO_MAX);
+  if(SERVO2_ENABLED) servo2.attach(SERVO_2_PIN, SERVO_MIN, SERVO_MAX);
+  if(SERVO3_ENABLED) servo3.attach(SERVO_3_PIN, SERVO_MIN, SERVO_MAX);
+  if(SERVO4_ENABLED) servo4.attach(SERVO_4_PIN, SERVO_MIN, SERVO_MAX);
 
   //Motor
   //*****
