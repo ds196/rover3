@@ -64,8 +64,18 @@ $("document").ready(() => {
     picoSub.subscribe((message) => {
         //servo1.text(message.data);
         console.log(`Recieved from pico: ${message.data}`);
+        let textAlreadyThere = $("#txt-picoSerialLog").val(); // There should already be a newline at the end of textAlreadyThere
+        $("#txt-picoSerialLog").val(textAlreadyThere + message.data);
+        if(message.data.startsWith("Temperature")) {
+            $("#txt-tpSensorData").val(message.data)
+        }
     });
 
+    $("btn-tpSensorData").on("click", () => {
+        commandPub.publish({
+            data: "pollbmp"
+        });
+    });
 
     /*$("#btn-submitAllSpeed").on("click", () => {
         commandPub.publish({

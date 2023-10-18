@@ -44,25 +44,37 @@
 
 <!-- MAIN VIEW -->
 <div class="container-fluid">
-<h1>Helloworld!</h1>
 <div class="row">
     
     <!-- CONTROLS SECTION -->
     <div class="col-8">
         <h1 style="color: white; text-align: center;"><b>Controls</b></h1>
-        <div class="row p-3">
-            <div class="card" style="width:18rem;">
-                <div class="card-body"  id="cardbody-picoManualCommand">
-                <body>
-                    <h1>Send to Pico</h1>                
-                    <textarea style="text-align: center;" id="txt-picoManualCommand" rows="2" cols="20"></textarea>
-                    <button type="button" id="btn-picoManualCommand" class="btn btn-dark">Send</button>
-                </body>
+        <div class="row p-2">
+            <div class="col p-3">
+                <div class="card" style="width:18rem;">
+                    <div class="card-body"  id="cardbody-picoManualCommand">
+                    <body>
+                        <h1>Send to Pico</h1>                
+                        <textarea style="text-align: center;" id="txt-picoManualCommand" rows="2" cols="20"></textarea>
+                        <button type="button" id="btn-picoManualCommand" class="btn btn-dark">Send</button>
+                    </body>
+                    </div>
+                </div>
+            </div>
+            <div class="col p-3">
+                <div class="card" style="width:18rem;">
+                    <div class="card-body"  id="cardbody-picoManualCommand">
+                    <body>
+                        <h1>Kbd capture</h1>                
+                        <textarea style="text-align: center;" id="txt-kbdCapture" rows="2" cols="20"></textarea>
+                        <button type="button" id="btn-kbdCapture" class="btn btn-dark">Capture</button>
+                    </body>
+                    </div>
                 </div>
             </div>
         </div>
         <!--ROW 1-->
-        <div class="row">
+        <!--<div class="row">
             <div class="col-6" style="background-color:pink;">
                 <p>trhe</p>
             </div>
@@ -70,7 +82,7 @@
                 <p>fuur</p>
             </div>
         </div>
-        <!--ROW 2-->
+        <!-ROW 2->
         <div class="row">
             <div class="col-6" style="background-color:pink;">
                 <p>trhe</p>
@@ -78,20 +90,20 @@
             <div class="col-6" style="background-color:yellow;">
                 <p>fuur</p>
             </div>
-        </div>
+        </div>-->
     </div>
     
     <!-- DATA SECTION -->
     <div class="col-4" style="border-left: 5px solid #333;">
         <h1 style="color: white;text-align: center;"><b>Data</b></h1>
         <!--SERVO & MOTOR DATA ROW-->
-        <div class="row p-3">
+        <div class="row p-1">
             <!--SERVO POS CARD-->
             <div class="col p-3">
             <div class="card" style="width:15rem;">
                 <div class="card-body">
                 <body>
-                    <h1>Servo Positions</h1>
+                    <h1>Servos</h1>
                     
                     <!--These should probably be renamed later to "shoulder", "elbow", etc-->
                     <textarea id="txt-servoPosData" rows="4" cols="17"
@@ -108,7 +120,7 @@ Servo 4: 500</textarea>
             <div class="card" style="width:15rem;">
                 <div class="card-body">
                 <body>
-                    <h1>Motor Mvmt</h1>
+                    <h1>Motor</h1>
                     
                     <!--These should probably be renamed later to "shoulder", "elbow", etc-->
                     <textarea id="txt-motorData" rows="2" cols="17"
@@ -120,17 +132,17 @@ Direction: clockwiseee</textarea>
             </div>
         </div>
         <!--SENSOR DATA ROW-->
-        <div class="row p-3">
+        <div class="row p-1">
             <div class="col p-3">
             <div class="card" style="width:15rem;">
                 <div class="card-body">
                 <body>
-                    <h1>T&P Sensor</h1>
+                    <h1>T&P</h1>
                     <textarea id="txt-tpSensorData" rows="3" cols="17"
 >Temp: 1000
 Pressure: 1000
 Approx. Alt: 1000</textarea>
-                    <button type="button" id="btn-updateTP" class="btn btn-dark">Update</button>
+                    <button type="button" id="btn-tpSensorData" class="btn btn-dark">Update</button>
                 </body>
                 </div>
             </div>
@@ -140,14 +152,27 @@ Approx. Alt: 1000</textarea>
             <div class="card" style="width:15rem;">
                 <div class="card-body">
                 <body>
-                    <h1>IMU Sensor</h1>
+                    <h1>IMU</h1>
                     <textarea id="txt-imuSensorData" rows="3" cols="17"
 >Position: 1000
 Orientation: 1000</textarea>
-                    <button type="button" id="btn-updateTP" class="btn btn-dark">Update</button>
+                    <button type="button" id="btn-imuSensorData" class="btn btn-dark">Update</button>
                 </body>
                 </div>
             </div>
+            </div>
+        </div>
+        <!-- PICO SERIAL LOG -->
+        <div class="row p-1">
+            <div class="col p-3">
+                <div class="card" style="width:34rem">
+                    <div class="card-body">
+                    <body>
+                        <h1>Pico Serial Log</h1>
+                        <textarea id="txt-picoSerialLog" rows="15" cols="50"></textarea>
+                    </body>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

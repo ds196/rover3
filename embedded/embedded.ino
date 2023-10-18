@@ -69,6 +69,11 @@ const int SERIAL_BAUD = 115200;
 double xPos = 0, yPos = 0, headingVel = 0;
 double DEG_2_RAD = 0.01745329251; //trig functions require radians, BNO055 outputs degrees
 
+double currTime = millis();
+double prevOpenLogTime = currTime;
+double openLogInterval = 500; //Write data to the openLog twice per second
+String openLogFileName = "log010.csv";
+
 
 
 //Setup hardware vars
@@ -161,7 +166,10 @@ void setup() {
   //Uses SoftwareSerial w/ TX pin
   if(SD_ENABLED) {
     setupOpenLog();
-    Serial.println("OpenLog set up.");
+    gotoCommandMode(); //Puts OpenLog in command mode
+    createFile("log010.csv"); //Creates a new file called log###.txt where ### is random
+    OpenLog.print("Time,temp,pressure,orientX,orientY,orientZ");
+    Serial.print("OpenLog set up.");
   } else {
     Serial.println("Openlog not enabled, check preprocessor statements");
   }
@@ -365,7 +373,7 @@ void loop() {
         int motorSpeed = args[1].toInt();
         int motorDir = args[2].toInt(); // 1 or 2
         if(motorSpeed != 0 && motorDir != 0) {
-          move(motorSpeed, motorDir-1);
+          move(motorSpeed, motorDir);
           Serial.println("Motor ran.");
         } else {
           Serial.println("Error: Invalid motor speed or direction provided");
@@ -393,18 +401,13 @@ void loop() {
         /*OpenLog.println("Hello world");
         OpenLog.println(millis());*/
         
-        
-        
-        gotoCommandMode(); //Puts OpenLog in command mode
-        createFile("log001.txt"); //Creates a new file called log###.txt where ### is random
-        
-        OpenLog.print("This is a test log to the OpenLog.\r");
+        OpenLog.print("Test,dsfsdfs,ssdfsdfs\r");
         
         Serial.println("File written.");
         
         //Now let's read back
         gotoCommandMode(); //Puts OpenLog in command mode
-        readFile("log001.txt"); //This dumps the contents of a given file to the serial terminal
+        readFile("log010.csv"); //This dumps the contents of a given file to the serial terminal
         Serial.println("File read.");
         
         //Now let's read back
@@ -421,9 +424,21 @@ void loop() {
 
   //Collect BNO Data
   //****************
-  //if(BNO_ENABLED) {
-  //  
-  //}
+  if(SD_ENABLED) {
+    currTime = millis();
+    if(prevOpenLogTime + openLogInterval <= currTime) {
+      if(BMP_ENABLED) {
+        if (! bmp.performReading()) {
+          Serial.println("Failed to perform reading :(");
+        }
+      } else {
+        Serial.println("BMP not enabled, check preprocessor statements");
+      }
+      //Log data to OpenLog
+      //OpenLog.print(currTime + "," + bmp.temperature + "," + bmp.pressure);
+      prevOpenLogTime += openLogInterval;
+    }
+  }
 }
 
 
@@ -437,6 +452,7 @@ void move(int speed, int direction){
 
   boolean inPin1 = LOW;
   boolean inPin2 = HIGH;
+
 
   if(direction == 1){
     inPin1 = HIGH;
