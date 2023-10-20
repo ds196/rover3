@@ -21,6 +21,9 @@ var outMotorStopped = false;
 const servoIncrement = 5;
 const motorIncrement = 20;
 
+let forward = 5;
+let up = 0;
+let kineIncrement = .5;
 let keysCurrPressed = [];
 
 // Connecting ROS + ros_bridge
@@ -155,6 +158,41 @@ $("document").ready(() => {
                 }
                 //setServos();
                 //updateServoText();
+            }
+        }
+
+        //Inverse kinematics
+        if(["KeyI", "KeyK", "KeyU", "KeyO"].indexOf(event.code) > -1) {
+            if(!isKeyPressed(event.code)) {
+                keyPress(event.code);
+                switch(event.code) {
+                    //Forward/backward
+                    case "KeyI":
+                        forward += kineIncrement;
+                        break;
+                    case "KeyK":
+                        forward -= kineIncrement;
+                        break;
+                    //Up/down
+                    case "KeyU":
+                        up -= kineIncrement;
+                        break;
+                    case "KeyO":
+                        up += kineIncrement;
+                        break;
+                }
+                if(up < 0) up = 0;
+                else if(up > 11) up = 11;
+                if(forward < 4.5) forward = 4.5;
+                else if(forward > 11) forward = 11;
+                let angles = findAngles(forward, up);
+                console.log(`forward=${forward}, up=${up}, t1=${angles[0].round(1)}, t2=${angles[1].round(1)}`);
+                let shoulderAngle = radToDeg(angles[0]).round(1);
+                let elbowAngle = radToDeg(angles[1]).round(1);
+                outServo4 = 180-shoulderAngle; // 90+(90-shoulderAngle)
+                outServo3 = 180-elbowAngle;
+                setServos();
+                updateServoText();
             }
         }
         
@@ -464,7 +502,67 @@ $("document").ready(() => {
         setTimeout(startServo, 300, servoNum, dir, increment, keyCode)
     }
 
+    /**
+     * Finds angles for shoulder, elbow, and wrist
+     * for x inches forward and y inches up from shoulder joint
+     * @param {number} x 
+     * inches forward from shoulder joint
+     * @param {number} y 
+     * inches up from shoulder joint
+     * @returns {Array}
+     * shoulder, elbow, wrist
+     */
+    function findAngles(x, y) {
+        let humerus = 5; //inches
+        let forearm = 7; //inches
+    
+        let t1=1000,t2=1000,t3=1000; //stupid values for debugging
+    
+        //Up and forward
+        if (x > 0 && y > 0) {let diag =  Math.sqrt(x**2 + y**2);
+            let alpha = Math.atan(x/y);
+            let beta =  Math.atan(y/x);
+            //A = Math.acos( (forearm**2 - humerus**2 + x**2 + y**2) / (2 * forearm * diag) );
+            //B = Math.asin( (forearm / humerus) * Math.sin(A) );
+            //D = Math.asin( (diag    / humerus) * Math.sin(A) );
+            let D = Math.acos( (humerus**2 + forearm**2 - diag**2) / (2*humerus*forearm) );
+            let A = Math.asin( (humerus/diag) * Math.sin(D) );
+            let B = Math.asin( (forearm/diag) * Math.sin(D) );
+    
+            t1 = B + beta;
+            t2 = D;
+            t3 = A + alpha; // 270-t3 = wrist angle
+        //Forward but not up
+        } else if(x > 0 && y == 0) {
+            t2 = Math.acos( (forearm**2 + humerus**2 - x**2) / (2*forearm*humerus) );
+            t1 = Math.asin( (forearm/x) * Math.sin(t2));
+            t3 = Math.asin( (humerus/x) * Math.sin(t2));
+        }
+        
+        //t1 = shoulder, t2 = elbow, t3 = wrist
+        return [t1, t2, t3];
+    }
+
 });
+
+/**
+ * Converts degrees to radians
+ * @param {number} rad 
+ * @returns {number}
+ */
+function radToDeg(rad) {
+    return rad * (180/Math.PI);
+}
+
+/**
+ * Rounds to d decimal places
+ * @param {number} d 
+ * @returns {number}
+ */
+Number.prototype.round = function(d) {
+    return Math.round((this + Number.EPSILON)*(10**d))/(10**d);
+};
+
 
 
 /*document.addEventListener('keydown', (event) => {
