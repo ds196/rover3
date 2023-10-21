@@ -50,30 +50,33 @@
     <div class="col-8">
         <h1 style="color: white; text-align: center;"><b>Controls</b></h1>
         <div class="row p-2">
-            <div class="col-6 p-3">
+            <div class="col-6 p-3" style="text-align: center;">
                 <div class="card" style="width:18rem;">
                     <div class="card-body"  id="cardbody-picoManualCommand">
                     <body>
                         <h1>Send to Pico</h1>                
-                        <textarea style="text-align: center;" id="txt-picoManualCommand" rows="2" cols="20"></textarea>
+                        <textarea style="text-align: center;" id="txt-picoManualCommand" rows="2" cols="20">setallservos 90</textarea>
                         <button type="button" id="btn-picoManualCommand" class="btn btn-dark">Send</button>
                     </body>
                     </div>
                 </div>
             </div>
-            <div class="col-6 p-3" style="text-align: center;"> 
+            <div class="col-6 p-3" style="text-align: left;"> 
                 <div class="row p-3">
-                    <button type="button" class="btn btn-dark btn-lg">Reset</button>
+                    <button type="button" id="btn-resetServos" class="btn btn-dark btn-lg">Reset</button>
                 </div>
                 <div class="row p-3">
-                    <button type="button" class="btn btn-dark btn-lg">Another</button>
+                    <button type="button" id="btn-dummyOpenLog" class="btn btn-dark btn-lg">Button for dummies</button>
                 </div>
                 <div class="row p-3">
-                    <button type="button" class="btn btn-dark btn-lg">Another Another</button>
+                    <button type="button" id="btn-dummydummyResetAll" class="btn btn-dark btn-lg">Dummy dummy</button>
                 </div>
-
             </div>
-            
+        </div>
+        <div class="row p-2">
+            <p style="text-align: center;">
+                <img src="./ASTRA_logo.png" alt="*A.S.T.R.A. logo" style="width:55%;" height="600px" id="astra-logo">
+            </p>
         </div>
     </div>
     

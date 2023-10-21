@@ -21,7 +21,7 @@ var outMotorStopped = false;
 const servoIncrement = 5;
 const motorIncrement = 20;
 
-let forward = 5;
+let forward = 6;
 let up = 0;
 let kineIncrement = .5;
 let keysCurrPressed = [];
@@ -94,7 +94,7 @@ $("document").ready(() => {
         }
     });
 
-    $("btn-updateTP").click(() => {
+    $("#btn-updateTP").click(() => {
         commandPub.publish({
             data: "pollbmp"
         });
@@ -104,6 +104,16 @@ $("document").ready(() => {
         commandPub.publish({
             data: "pollbno"
         });
+    });
+
+    $("#btn-resetServos").click(() => {
+        outServo1 = 90;
+        outServo2 = 90;
+        outServo3 = 90;
+        outServo4 = 90;
+        console.log(`Reset servos: ${outServo1}, ${outServo2}, ${outServo3}, ${outServo4}`);
+        setServos();
+        updateServoText();
     });
 
     // Keydown
@@ -182,15 +192,15 @@ $("document").ready(() => {
                         break;
                 }
                 if(up < 0) up = 0;
-                else if(up > 11) up = 11;
-                if(forward < 4.5) forward = 4.5;
+                else if(up > 10) up = 11;
+                if(forward < 6) forward = 6;
                 else if(forward > 11) forward = 11;
                 let angles = findAngles(forward, up);
                 console.log(`forward=${forward}, up=${up}, t1=${angles[0].round(1)}, t2=${angles[1].round(1)}`);
                 let shoulderAngle = radToDeg(angles[0]).round(1);
                 let elbowAngle = radToDeg(angles[1]).round(1);
                 outServo4 = 180-shoulderAngle; // 90+(90-shoulderAngle)
-                outServo3 = 180-elbowAngle;
+                outServo3 = 90+(90-elbowAngle)*2;
                 setServos();
                 updateServoText();
             }
@@ -224,7 +234,7 @@ $("document").ready(() => {
         }
 
         //Motor explicit stop
-        if(event.code == "KeyK") {
+        if(event.code == "KeyM") {
             commandPub.publish({
                 data: "stopmotor"
             });
@@ -334,8 +344,10 @@ $("document").ready(() => {
             || event.code == "KeyG" 
             || event.code == "KeyJ")
         {
-            setMotor();
             outMotorStopped = true;
+            commandPub.publish({
+                data: `stopmotor`
+            });
             updateMotorText();
         }
     });
