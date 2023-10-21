@@ -37,26 +37,25 @@
 #define SERVO3_ENABLED 1
 #define SERVO4_ENABLED 1 //High Torque Servo
 #define MOTOR_ENABLED  1
-#define SD_ENABLED     0 //OpenLog
+#define SD_ENABLED     1 //OpenLog
 
 
 
 //Pins
-#define SD_RESET_PIN    0 //DTR/CTS??? DTR on schematic
-#define SD_TX_PIN       1 //UART TX to OpenLog RX
-#define SD_RX_PIN       2 //UART RX to OpenLog TX
+//#define SD_RESET_PIN    0 //DTR/CTS??? DTR on schematic
+#define SD_TX_PIN       0 //UART TX to OpenLog RX
+//#define SD_RX_PIN       2 //UART RX to OpenLog TX
 #define I2C_SDA_PIN     4 //I2C SDA
 #define I2C_SCL_PIN     5 //I2C SCL
-#define SERVO_1_PIN    10 //Metal Gear Servos
-#define SERVO_2_PIN    11 // "
-#define SERVO_3_PIN    12 // "
-#define SERVO_4_PIN    13 //High Torque Servo
+#define SERVO_1_PIN    18 //Metal Gear Servos
+#define SERVO_2_PIN    19 // "
+#define SERVO_3_PIN    20 // "
+#define SERVO_4_PIN    21 //High Torque Servo
 #define MOTOR_IN2_PIN  14 //Named "MOTOR_AIN2_IO" on schematic
 #define MOTOR_PWM_PIN  15 //Motor Controller PWM
 #define MOTOR_STBY_PIN 16 //Motor stby pin
 #define MOTOR_IN1_PIN  17 //Named "MOTOR_AIN1_IO" on schematic
-//#define LED_PWM_PIN    18 //NOT PLUGGED IN! 
-#define LED_PIN        25 //On-board LED
+//#define LED_PWM_PIN    18 //NOT PLUGGED IN!
 
 
 
@@ -69,18 +68,16 @@ const int SERIAL_BAUD = 115200;
 double xPos = 0, yPos = 0, headingVel = 0;
 double DEG_2_RAD = 0.01745329251; //trig functions require radians, BNO055 outputs degrees
 
+// OPENLOG
 double currTime = millis();
 double prevOpenLogTime = currTime;
 double openLogInterval = 500; //Write data to the openLog twice per second
-String openLogFileName = "log010.csv";
-
 
 
 //Setup hardware vars
 Adafruit_BMP3XX bmp;
 //                                    id,addr
 Adafruit_BNO055 bno = Adafruit_BNO055(55,0x28,&Wire);
-SoftwareSerial OpenLog(SD_RX_PIN,SD_TX_PIN); // RX, TX pins
 Servo servo1;
 Servo servo2;
 Servo servo3;
@@ -93,18 +90,22 @@ void setup() {
 
   //Initialization
   //**************
-  // Initialize LED_PIN as an output
-  pinMode(LED_PIN, OUTPUT);
+  // Initialize LED_BUILTIN as an output
+  pinMode(LED_BUILTIN, OUTPUT);
   // Turn LED on for initialization
-  digitalWrite(LED_PIN, HIGH);
+  digitalWrite(LED_BUILTIN, HIGH);
   
   // Configure serial transport
   Wire.begin(); //Join I2C bus
   Serial.begin(SERIAL_BAUD); //115200 set in original code, 9600 default for pico
   delay(100);
+
+  //OpenLog
+  Serial1.begin(9600);
+  delay(1000);
   
   // Turn LED off after serial initialization
-  digitalWrite(LED_PIN, LOW);
+  digitalWrite(LED_BUILTIN, LOW);
   Serial.println("Initialization complete");
   Serial.println("-------------");
 
@@ -134,8 +135,14 @@ void setup() {
     // Setup bmp I2C
     if (!bmp.begin_I2C()) {   // hardware I2C mode
       Serial.println("Could not find a valid BMP3 sensor, check wiring!");
-      while (1);
+      //while (1);
     }
+    /*int i = 0;
+    while(i < 100 && !bmp.begin_I2C()) {
+      i++;
+      delay(50);
+    }*/
+    digitalWrite(LED_BUILTIN, HIGH);
 
     // Set up oversampling and filter initialization
     bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
@@ -165,18 +172,17 @@ void setup() {
   //************
   //Uses SoftwareSerial w/ TX pin
   if(SD_ENABLED) {
-    setupOpenLog();
-    gotoCommandMode(); //Puts OpenLog in command mode
-    createFile("log010.csv"); //Creates a new file called log###.txt where ### is random
-    OpenLog.print("Time,temp,pressure,orientX,orientY,orientZ");
-    Serial.print("OpenLog set up.");
+    Serial1.print("Time, Temperature, Pressure, AccelX, AccelY, AccelZ\n");
+    Serial.println("OpenLog set up.");
   } else {
     Serial.println("Openlog not enabled, check preprocessor statements");
   }
 
   Serial.println("Hardware configured.");
   Serial.println("-------------");
-  
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
 }
 
 
@@ -219,10 +225,10 @@ void loop() {
     //****************
 
     if        (command == "led_on") {
-      digitalWrite(LED_PIN, HIGH);
+      digitalWrite(LED_BUILTIN, HIGH);
 
     } else if (command == "led_off") {
-      digitalWrite(LED_PIN, LOW);
+      digitalWrite(LED_BUILTIN, LOW);
 
     } else if (command == "ping") {
       Serial.println("pong");
@@ -266,6 +272,9 @@ void loop() {
       } else {
         Serial.println("BMP not enabled, check preprocessor statements");
       }
+    
+    } else if (command == "beginbmp") {
+      bmp.begin_I2C();
     
     } else if (command == "pollbno") {
       if(BNO_ENABLED) {
@@ -373,7 +382,7 @@ void loop() {
         int motorSpeed = args[1].toInt();
         int motorDir = args[2].toInt(); // 1 or 2
         if(motorSpeed != 0 && motorDir != 0) {
-          move(motorSpeed, motorDir);
+          move(motorSpeed, motorDir-1);
           Serial.println("Motor ran.");
         } else {
           Serial.println("Error: Invalid motor speed or direction provided");
@@ -398,49 +407,68 @@ void loop() {
     
     } else if(command == "testwritesd") {
       if(SD_ENABLED) {
-        /*OpenLog.println("Hello world");
-        OpenLog.println(millis());*/
-        
-        OpenLog.print("Test,dsfsdfs,ssdfsdfs\r");
-        
-        Serial.println("File written.");
-        
-        //Now let's read back
-        gotoCommandMode(); //Puts OpenLog in command mode
-        readFile("log010.csv"); //This dumps the contents of a given file to the serial terminal
-        Serial.println("File read.");
-        
-        //Now let's read back
-        //readDisk(); //Check the size and stats of the SD card
+        Serial1.print("This is a test write of the OpenLog.\n");
       } else {
         Serial.println("Motor not enabled, check preprocessor statements");
       }
-    
-    } else if (command == "resetopenlog") {
-      setupOpenLog();
     }
   }
 
 
   //Collect BNO Data
   //****************
-  if(SD_ENABLED) {
+  if(BNO_ENABLED && BMP_ENABLED && SD_ENABLED) {
     currTime = millis();
     if(prevOpenLogTime + openLogInterval <= currTime) {
-      if(BMP_ENABLED) {
-        if (! bmp.performReading()) {
-          Serial.println("Failed to perform reading :(");
-        }
-      } else {
-        Serial.println("BMP not enabled, check preprocessor statements");
+      //BMP
+      if (! bmp.performReading()) {
+        Serial.println("Failed to perform reading :(");
+        return;
       }
-      //Log data to OpenLog
-      //OpenLog.print(currTime + "," + bmp.temperature + "," + bmp.pressure);
+      //BNO
+      sensors_event_t angVelocityData , linearAccelData, accelerometerData;
+      bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
+      bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+      bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+
+      //double accelX = accelerometerData->acceleration.x;
+      //double accelY = accelerometerData->acceleration.y;
+      //double accelZ = accelerometerData->acceleration.z;
+      Serial1.print(currTime);
+      Serial1.print(", ");
+      Serial1.print(bmp.temperature);
+      Serial1.print(", ");
+      Serial1.print(bmp.pressure);
+      Serial1.print(", ");
+      Serial1.print(getBNOData(&accelerometerData));
+      Serial1.print("\n");
       prevOpenLogTime += openLogInterval;
     }
+    
   }
+
 }
 
+String getBNOData(sensors_event_t* event) {
+  String output = "";
+  output.concat(event->acceleration.x);
+  output.concat(", ");
+  output.concat(event->acceleration.y);
+  output.concat(", ");
+  output.concat(event->acceleration.z);
+  return output;
+}
+double getBNOX(sensors_event_t* event) {
+  return event->acceleration.x;
+}
+double getBNOY(sensors_event_t* event) {
+  return event->acceleration.y;
+}
+double getBNOZ(sensors_event_t* event) {
+  return event->acceleration.z;
+}
+
+//Motor functions
 
 void move(int speed, int direction){
 //Stolen from https://adam-meyer.com/arduino/TB6612FNG
@@ -452,7 +480,6 @@ void move(int speed, int direction){
 
   boolean inPin1 = LOW;
   boolean inPin2 = HIGH;
-
 
   if(direction == 1){
     inPin1 = HIGH;
@@ -467,172 +494,4 @@ void move(int speed, int direction){
 void stop(){
 //enable standby  
   digitalWrite(MOTOR_STBY_PIN, LOW);
-}
-
-
-
-
-
-
-
-
-
-
-void setupOpenLog(void) {
-  pinMode(SD_RESET_PIN, OUTPUT);
-  OpenLog.begin(9600);
-
-  //Reset OpenLog
-  digitalWrite(SD_RESET_PIN, LOW);
-  delay(100);
-  digitalWrite(SD_RESET_PIN, HIGH);
-
-  //Wait for OpenLog to respond with '<' to indicate it is alive and recording to a file
-  Serial.println("Waiting for OpenLog Ready...");
-  while(1) {
-    if(OpenLog.available())
-      if(OpenLog.read() == '<') {break; Serial.println("OpenLog ready.");}
-  }
-}
-
-//This function creates a given file and then opens it in append mode (ready to record characters to the file)
-//Then returns to listening mode
-void createFile(char *fileName) {
-
-  //Old way
-  OpenLog.print("new ");
-  OpenLog.print(fileName);
-  OpenLog.write(13); //This is \r
-
-  //New way
-  //OpenLog.print("new ");
-  //OpenLog.println(filename); //regular println works with OpenLog v2.51 and above
-
-  //Wait for OpenLog to return to waiting for a command
-  while(1) {
-    if(OpenLog.available())
-      if(OpenLog.read() == '>') break;
-  }
-
-  OpenLog.print("append ");
-  OpenLog.print(fileName);
-  OpenLog.write(13); //This is \r
-
-  //Wait for OpenLog to indicate file is open and ready for writing
-  while(1) {
-    if(OpenLog.available())
-      if(OpenLog.read() == '<') break;
-  }
-
-  //OpenLog is now waiting for characters and will record them to the new file  
-}
-
-//Reads the contents of a given file and dumps it to the serial terminal
-//This function assumes the OpenLog is in command mode
-void readFile(char *fileName) {
-
-  //Old way
-  OpenLog.print("read ");
-  OpenLog.print(fileName);
-  OpenLog.write(13); //This is \r
-
-  //New way
-  //OpenLog.print("read ");
-  //OpenLog.println(filename); //regular println works with OpenLog v2.51 and above
-
-  //The OpenLog echos the commands we send it by default so we have 'read log823.txt\r' sitting 
-  //in the RX buffer. Let's try to not print this.
-  while(1) {
-    if(OpenLog.available())
-      if(OpenLog.read() == '\r') break;
-  }  
-
-  //This will listen for characters coming from OpenLog and print them to the terminal
-  //This relies heavily on the SoftSerial buffer not overrunning. This will probably not work
-  //above 38400bps.
-  //This loop will stop listening after 1 second of no characters received
-  for(int timeOut = 0 ; timeOut < 1000 ; timeOut++) {
-    while(OpenLog.available()) {
-      char tempString[100];
-      
-      int spot = 0;
-      while(OpenLog.available()) {
-        tempString[spot++] = OpenLog.read();
-        if(spot > 98) break;
-      }
-      tempString[spot] = '\0';
-      Serial.write(tempString); //Take the string from OpenLog and push it to the Arduino terminal
-      timeOut = 0;
-    }
-
-    delay(1);
-  }
-
-  //This is not perfect. The above loop will print the '.'s from the log file. These are the two escape characters
-  //recorded before the third escape character is seen.
-  //It will also print the '>' character. This is the OpenLog telling us it is done reading the file.  
-
-  //This function leaves OpenLog in command mode
-}
-
-//Check the stats of the SD card via 'disk' command
-//This function assumes the OpenLog is in command mode
-void readDisk() {
-
-  //Old way
-  OpenLog.print("disk");
-  OpenLog.write(13); //This is \r
-
-  //New way
-  //OpenLog.print("read ");
-  //OpenLog.println(filename); //regular println works with OpenLog v2.51 and above
-
-  //The OpenLog echos the commands we send it by default so we have 'disk\r' sitting 
-  //in the RX buffer. Let's try to not print this.
-  while(1) {
-    if(OpenLog.available())
-      if(OpenLog.read() == '\r') break;
-  }  
-
-  //This will listen for characters coming from OpenLog and print them to the terminal
-  //This relies heavily on the SoftSerial buffer not overrunning. This will probably not work
-  //above 38400bps.
-  //This loop will stop listening after 1 second of no characters received
-  for(int timeOut = 0 ; timeOut < 1000 ; timeOut++) {
-    while(OpenLog.available()) {
-      char tempString[100];
-      
-      int spot = 0;
-      while(OpenLog.available()) {
-        tempString[spot++] = OpenLog.read();
-        if(spot > 98) break;
-      }
-      tempString[spot] = '\0';
-      Serial.write(tempString); //Take the string from OpenLog and push it to the Arduino terminal
-      timeOut = 0;
-    }
-
-    delay(1);
-  }
-
-  //This is not perfect. The above loop will print the '.'s from the log file. These are the two escape characters
-  //recorded before the third escape character is seen.
-  //It will also print the '>' character. This is the OpenLog telling us it is done reading the file.  
-
-  //This function leaves OpenLog in command mode
-}
-
-//This function pushes OpenLog into command mode
-void gotoCommandMode(void) {
-  //Send three control z to enter OpenLog command mode
-  //Works with Arduino v1.0
-  OpenLog.write(26);
-  OpenLog.write(26);
-  OpenLog.write(26);
-
-  //Wait for OpenLog to respond with '>' to indicate we are in command mode
-  while(1) {
-    if(OpenLog.available())
-      if(OpenLog.read() == '>') break;
-  }
 }
