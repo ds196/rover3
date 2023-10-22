@@ -29,18 +29,6 @@
 
 
 
-//Enable/Disable
-#define BMP_ENABLED    1
-#define BNO_ENABLED    1
-#define SERVO1_ENABLED 1
-#define SERVO2_ENABLED 1
-#define SERVO3_ENABLED 1
-#define SERVO4_ENABLED 1 //High Torque Servo
-#define MOTOR_ENABLED  1
-#define SD_ENABLED     1 //OpenLog
-
-
-
 //Pins
 //#define SD_RESET_PIN    0 //DTR/CTS??? DTR on schematic
 #define SD_TX_PIN       0 //UART TX to OpenLog RX
@@ -55,19 +43,14 @@
 #define MOTOR_PWM_PIN  15 //Motor Controller PWM
 #define MOTOR_STBY_PIN 16 //Motor stby pin
 #define MOTOR_IN1_PIN  17 //Named "MOTOR_AIN1_IO" on schematic
-//#define LED_PWM_PIN    18 //NOT PLUGGED IN!
 
 
 
 //Predeclarations
 #define SEALEVELPRESSURE_HPA (1013.25)
-const int SERVO_MIN =  500;
-const int SERVO_MAX = 2500;
+const int SERVO_MIN =  500; //milliseconds
+const int SERVO_MAX = 2500; //milliseconds
 const int SERIAL_BAUD = 115200;
-// BNO
-double xPos = 0, yPos = 0, headingVel = 0;
-double DEG_2_RAD = 0.01745329251; //trig functions require radians, BNO055 outputs degrees
-
 // OPENLOG
 double currTime = millis();
 double prevOpenLogTime = currTime;
@@ -106,79 +89,60 @@ void setup() {
   
   // Turn LED off after serial initialization
   digitalWrite(LED_BUILTIN, LOW);
-  Serial.println("Initialization complete");
-  Serial.println("-------------");
+  Serial.println("Initialization complete.");
 
 
   //Servos
   //******
-  if(SERVO1_ENABLED) servo1.attach(SERVO_1_PIN, SERVO_MIN, SERVO_MAX);
-  if(SERVO2_ENABLED) servo2.attach(SERVO_2_PIN, SERVO_MIN, SERVO_MAX);
-  if(SERVO3_ENABLED) servo3.attach(SERVO_3_PIN, SERVO_MIN, SERVO_MAX);
-  if(SERVO4_ENABLED) servo4.attach(SERVO_4_PIN, SERVO_MIN, SERVO_MAX);
+  servo1.attach(SERVO_1_PIN, SERVO_MIN, SERVO_MAX);
+  servo2.attach(SERVO_2_PIN, SERVO_MIN, SERVO_MAX);
+  servo3.attach(SERVO_3_PIN, SERVO_MIN, SERVO_MAX);
+  servo4.attach(SERVO_4_PIN, SERVO_MIN, SERVO_MAX);
 
   //Motor
   //*****
-  if(MOTOR_ENABLED) {
-    pinMode(MOTOR_IN1_PIN, OUTPUT);
-    pinMode(MOTOR_IN2_PIN, OUTPUT);
-    pinMode(MOTOR_PWM_PIN, OUTPUT);
-    pinMode(MOTOR_STBY_PIN, OUTPUT);
-  } else {
-    Serial.println("Motor not enabled, check preprocessor statements");
-  }
+  pinMode(MOTOR_IN1_PIN, OUTPUT);
+  pinMode(MOTOR_IN2_PIN, OUTPUT);
+  pinMode(MOTOR_PWM_PIN, OUTPUT);
+  pinMode(MOTOR_STBY_PIN, OUTPUT);
 
 
   //BMP Sensor
   //**********
-  if(BMP_ENABLED) {
-    // Setup bmp I2C
-    if (!bmp.begin_I2C()) {   // hardware I2C mode
-      Serial.println("Could not find a valid BMP3 sensor, check wiring!");
-      //while (1);
-    }
-    /*int i = 0;
-    while(i < 100 && !bmp.begin_I2C()) {
-      i++;
-      delay(50);
-    }*/
-    digitalWrite(LED_BUILTIN, HIGH);
-
-    // Set up oversampling and filter initialization
-    bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
-    bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X);
-    bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
-    bmp.setOutputDataRate(BMP3_ODR_50_HZ);
-  } else {
-    Serial.println("BMP not enabled, check preprocessor statements");
+  // Setup bmp I2C
+  if (!bmp.begin_I2C()) {   // hardware I2C mode
+    Serial.println("Could not find a valid BMP3 sensor, check wiring!");
+    //while (1);
   }
+  /*int i = 0;
+  while(i < 100 && !bmp.begin_I2C()) {
+    i++;
+    delay(50);
+  }*/
+  // Set up oversampling and filter initialization
+  bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
+  bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X);
+  bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
+  bmp.setOutputDataRate(BMP3_ODR_50_HZ);
 
 
   //BNO Sensor
   //**********
-  if(BNO_ENABLED) {
-    if (!bno.begin()) {
-      /* There was a problem detecting the BNO055 ... check your connections */
-      Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-      while (1);
-    }
-    //Not much to do here lol
-  } else {
-    Serial.println("BNO not enabled, check preprocessor statements");
+  if (!bno.begin()) {
+    /* There was a problem detecting the BNO055 ... check your connections */
+    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    while (1);
   }
+  //Not much to do here lol
 
 
   //OpenLog (SD)
   //************
   //Uses SoftwareSerial w/ TX pin
-  if(SD_ENABLED) {
-    Serial1.print("Time, Temperature, Pressure, AccelX, AccelY, AccelZ\n");
-    Serial.println("OpenLog set up.");
-  } else {
-    Serial.println("Openlog not enabled, check preprocessor statements");
-  }
+  Serial1.print("Time, Temperature, Pressure, AccelX, AccelY, AccelZ\n");
 
   Serial.println("Hardware configured.");
+  Serial.println(millis());
   Serial.println("-------------");
   digitalWrite(LED_BUILTIN, HIGH);
   delay(1000);
@@ -221,9 +185,150 @@ void loop() {
      * Second is args[2], etc
      */
 
-    //General commands
+    //Commands
     //****************
+    /*switch(command) {
+//General
+      case "led_on":
+        digitalWrite(LED_BUILTIN, HIGH);
+        break;
+      case "led_off":
+        digitalWrite(LED_BUILTIN, LOW);
+        break;
+      case "ping":
+        Serial.print(millis());
+        Serial.print("ping\n");
+        break;
+      case "time":
+        Serial.println(millis());
+        break;
+      case "line":
+        Serialprintln("-------------");
+        break;
+      case "help":
+        Serial.println("led_on; led_off; ping; time; line; pollbmp; pollbno; setservo;");
+        Serial.println("setmotor; testwritesd");
+        break;
+//Sensors
+      case "pollbmp":
+        if (! bmp.performReading()) {
+          Serial.println("Failed to perform reading :(");
+          return;
+        }
+        //temp record
+        Serial.print("Temp: ");
+        Serial.print(bmp.temperature);
+        Serial.println(" *C");
+        //presure record
+        Serial.print("Pressure: ");
+        Serial.print(bmp.pressure);
+        Serial.println(" Pa");
+        //approx altitude
+        //Serial.print("Approx. Altitude = ");
+        //Serial.print(bmp.readAltitude(SEALEVELPRESSURE_HPA));
+        //Serial.println(" m");
+        break;
+      case "beginbmp":
+        bmp.begin_I2C();
+        break;
+      case "pollbno":
+        if (! bmp.performReading()) {
+          Serial.println("Failed to perform reading :(");
+          return;
+        }
+        sensors_event_t angVelocityData , linearAccelData, accelerometerData;
+        bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
+        bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+        bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+        Serial.print("Accel: ");
+        Serial.println(getBNOData(&accelerometerData));
+        break;
+//Servos
+      case "setservo":
+        int servoNum = args[1].toInt(); //First arg is servo number (ex servo1, servo2, etc)
+        int pos = args[2].toInt(); //Second arg is num to set the servo to
+        bool err = false; //Set true if the servo specified is disable in preprocessor statements
 
+        if(servoNum != 0) { //If the servo number provided is a real number
+          //Set servo depending on which servo
+          //Error if the servo is not enabled in preprocessor statements
+          switch(servoNum) {
+            case 1:
+              servo1.write(pos);
+              break;
+            case 2:
+              servo2.write(pos);
+              break;
+            case 3:
+              servo3.write(pos);
+              break;
+            case 4:
+              servo4.write(pos);
+              break;
+            default:
+              //Did not select one of 4 servos, though real number given
+              Serial.println("Error: select a servo with a number 1-4");
+              err = true;
+              break;
+          }
+          //Print a success message if no error occured
+          if(!err) {
+            Serial.print("Set servo ");
+            Serial.print(servoNum);
+            Serial.print(" to ");
+            Serial.print(pos);
+            Serial.println(".");
+          }
+        } else {
+          Serial.println("Error: invalid servo number");
+        }
+        break;
+      case "setallservos":
+        int servoPow = args[1].toInt();
+        if(servoPow != 0) {
+          servo1.write(servoPow);
+          servo2.write(servoPow);
+          servo3.write(servoPow);
+          servo4.write(servoPow);
+        } else {
+          Serial.println("Error: invalid value for servo power");
+        }
+        break;
+      case "sr":
+        int servo1Pow = args[1].toInt();
+        int servo2Pow = args[2].toInt();
+        int servo3Pow = args[3].toInt();
+        int servo4Pow = args[4].toInt();
+        if(servo1Pow != 0 && servo2Pow != 0 && servo3Pow != 0 && servo4Pow != 0) {
+          servo1.write(servo1Pow);
+          servo2.write(servo2Pow);
+          servo3.write(servo3Pow);
+          servo4.write(servo4Pow);
+        } else {
+          Serial.println("Error: invalid value for one or more servo's power");
+        }
+        break;
+//Motor
+      case "setmotor":
+        int motorSpeed = args[1].toInt();
+        int motorDir = args[2].toInt(); // 1 or 2
+        if(motorSpeed != 0 && motorDir != 0) {
+          move(motorSpeed, motorDir-1);
+          Serial.println("Motor ran.");
+        } else {
+          Serial.println("Error: Invalid motor speed or direction provided");
+        }
+      case "stopmotor":
+        stop();
+        Serial.println("Motor stopped.");
+        break;
+//OpenLog
+      case "testwritesd":
+        Serial1.print("This is a test write of the OpenLog.\n");
+        break;
+    }*/
+
+    
     if        (command == "led_on") {
       digitalWrite(LED_BUILTIN, HIGH);
 
@@ -231,12 +336,11 @@ void loop() {
       digitalWrite(LED_BUILTIN, LOW);
 
     } else if (command == "ping") {
-      Serial.println("pong");
-      Serial.println("-------------");
+      Serial.print(millis());
+      Serial.println("-pong");
 
     } else if (command == "time") {
       Serial.println(millis());
-      Serial.println("-------------");
 
     } else if (command == "line") {
       Serial.println("-------------");
@@ -245,60 +349,41 @@ void loop() {
       //Serial.println("Sounds like it sucks to be you");
       Serial.println("led_on; led_off; ping; time; line; pollbmp; pollbno; setservo;");
       Serial.println("setmotor; testwritesd");
-      Serial.println("-------------");
 
     //Sensors
     //*******
     
     } else if (command == "pollbmp") {
-      if(BMP_ENABLED) {
-        if (! bmp.performReading()) {
-          Serial.println("Failed to perform reading :(");
-          return;
-        }
-        //temp record
-        Serial.print("Temperature = ");
-        Serial.print(bmp.temperature);
-        Serial.println(" *C");
-        //presure record
-        Serial.print("Pressure = ");
-        Serial.print(bmp.pressure / 100.0);
-        Serial.println(" hPa");
-        //approx altitude
-        Serial.print("Approx. Altitude = ");
-        Serial.print(bmp.readAltitude(SEALEVELPRESSURE_HPA));
-        Serial.println(" m");
-        Serial.println("-------------");
-      } else {
-        Serial.println("BMP not enabled, check preprocessor statements");
+      if (! bmp.performReading()) {
+        Serial.println("Failed to perform reading :(");
+        return;
       }
+      //temp record
+      Serial.print("Temp: ");
+      Serial.print(bmp.temperature);
+      Serial.println(" *C");
+      //presure record
+      Serial.print("Pressure: ");
+      Serial.print(bmp.pressure);
+      Serial.println(" Pa");
+      //approx altitude
+      //Serial.print("Approx. Altitude = ");
+      //Serial.print(bmp.readAltitude(SEALEVELPRESSURE_HPA));
+      //Serial.println(" m");
     
     } else if (command == "beginbmp") {
       bmp.begin_I2C();
     
     } else if (command == "pollbno") {
-      if(BNO_ENABLED) {
-        //Poll data from bno
-        sensors_event_t orientationData , angVelocityData , linearAccelData, magnetometerData, accelerometerData, gravityData;
-        bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
-        bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
-        bno.getEvent(&magnetometerData, Adafruit_BNO055::VECTOR_MAGNETOMETER);
-        bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-        bno.getEvent(&gravityData, Adafruit_BNO055::VECTOR_GRAVITY);
-        //Print data
-        Serial.print("Orientation x: ");
-        Serial.println(orientationData.orientation.x);
-        Serial.print("Orientation y: ");
-        Serial.println(orientationData.orientation.y);
-        Serial.print("Accel x: ");
-        Serial.println(linearAccelData.orientation.x);
-        Serial.print("Accel y: ");
-        Serial.println(linearAccelData.orientation.y);
-        Serial.println("-------------");
-      } else {
-        Serial.println("BNO not enabled, check preprocessor statements");
+      if (! bmp.performReading()) {
+        Serial.println("Failed to perform reading :(");
+        return;
       }
+      sensors_event_t linearAccelData, accelerometerData;
+      bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+      bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+      Serial.print("Accel: ");
+      Serial.println(getBNOData(&accelerometerData));
     
     //Servos
     //******
@@ -313,20 +398,16 @@ void loop() {
         //Error if the servo is not enabled in preprocessor statements
         switch(servoNum) {
           case 1:
-            if(SERVO1_ENABLED) {servo1.write(pos);}
-            else {Serial.println("Servo 1 not enabled, check preprocessor statements"); err = true;}
+            servo1.write(pos);
             break;
           case 2:
-            if(SERVO2_ENABLED) {servo2.write(pos);}
-            else {Serial.println("Servo 2 not enabled, check preprocessor statements"); err = true;}
+            servo2.write(pos);
             break;
           case 3:
-            if(SERVO3_ENABLED) {servo3.write(pos);}
-            else {Serial.println("Servo 3 not enabled, check preprocessor statements"); err = true;}
+            servo3.write(pos);
             break;
           case 4:
-            if(SERVO4_ENABLED) {servo4.write(pos);}
-            else {Serial.println("Servo 4 not enabled, check preprocessor statements"); err = true;}
+            servo4.write(pos);
             break;
           default:
             //Did not select one of 4 servos, though real number given
@@ -342,11 +423,8 @@ void loop() {
           Serial.print(pos);
           Serial.println(".");
         }
-        //Error or not, print a line 
-        Serial.println("-------------");
       } else {
         Serial.println("Error: invalid servo number");
-        Serial.println("-------------");
       }
     
     } else if (command == "setallservos") {
@@ -378,77 +456,56 @@ void loop() {
     //*****
     
     } else if (command == "setmotor") {
-      if(MOTOR_ENABLED) {
-        int motorSpeed = args[1].toInt();
-        int motorDir = args[2].toInt(); // 1 or 2
-        if(motorSpeed != 0 && motorDir != 0) {
-          move(motorSpeed, motorDir-1);
-          Serial.println("Motor ran.");
-        } else {
-          Serial.println("Error: Invalid motor speed or direction provided");
-        }
-        Serial.println("-------------");
+      int motorSpeed = args[1].toInt();
+      int motorDir = args[2].toInt(); // 1 or 2
+      if(motorSpeed != 0 && motorDir != 0) {
+        move(motorSpeed, motorDir-1);
+        Serial.println("Motor ran.");
       } else {
-        Serial.println("Motor not enabled, check preprocessor statements");
+        Serial.println("Error: Invalid motor speed or direction provided");
       }
     
     } else if (command == "stopmotor") {
-      if(MOTOR_ENABLED) {
-        stop();
-        Serial.println("Motor stopped.");
-        Serial.println("-------------");
-      } else {
-        Serial.println("Motor not enabled, check preprocessor statements");
-      }
+      stop();
+      Serial.println("Motor stopped.");
     
 
     //OpenLog
     //*******
     
     } else if(command == "testwritesd") {
-      if(SD_ENABLED) {
-        Serial1.print("This is a test write of the OpenLog.\n");
-      } else {
-        Serial.println("Motor not enabled, check preprocessor statements");
-      }
+      Serial1.print("This is a test write of the OpenLog.\n");
     }
   }
 
 
   //Collect BNO Data
   //****************
-  if(BNO_ENABLED && BMP_ENABLED && SD_ENABLED) {
-    currTime = millis();
-    if(prevOpenLogTime + openLogInterval <= currTime) {
-      //BMP
-      if (! bmp.performReading()) {
-        Serial.println("Failed to perform reading :(");
-        return;
-      }
-      //BNO
-      sensors_event_t angVelocityData , linearAccelData, accelerometerData;
-      bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
-      bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
-      bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-
-      //double accelX = accelerometerData->acceleration.x;
-      //double accelY = accelerometerData->acceleration.y;
-      //double accelZ = accelerometerData->acceleration.z;
-      Serial1.print(currTime);
-      Serial1.print(", ");
-      Serial1.print(bmp.temperature);
-      Serial1.print(", ");
-      Serial1.print(bmp.pressure);
-      Serial1.print(", ");
-      Serial1.print(getBNOData(&accelerometerData));
-      Serial1.print("\n");
-      prevOpenLogTime += openLogInterval;
+  currTime = millis();
+  if(prevOpenLogTime + openLogInterval <= currTime) {
+    //BMP & BNO
+    if (! bmp.performReading()) {
+      Serial.println("Failed to perform reading :(");
+      return;
     }
-    
+    sensors_event_t linearAccelData, accelerometerData;
+    bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+    bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+
+    Serial1.print(currTime);
+    Serial1.print(", ");
+    Serial1.print(bmp.temperature);
+    Serial1.print(", ");
+    Serial1.print(bmp.pressure);
+    Serial1.print(", ");
+    Serial1.print(getBNOData(&accelerometerData));
+    Serial1.print("\n");
+    prevOpenLogTime += openLogInterval;
   }
 
 }
 
+//BNO
 String getBNOData(sensors_event_t* event) {
   String output = "";
   output.concat(event->acceleration.x);
@@ -471,10 +528,10 @@ double getBNOZ(sensors_event_t* event) {
 //Motor functions
 
 void move(int speed, int direction){
-//Stolen from https://adam-meyer.com/arduino/TB6612FNG
-//Move motor at speed and direction
-//speed: 0 is off, and 255 is full speed
-//direction: 0 clockwise, 1 counter-clockwise
+  //Stolen from https://adam-meyer.com/arduino/TB6612FNG
+  //Move motor at speed and direction
+  //speed: 0 is off, and 255 is full speed
+  //direction: 0 clockwise, 1 counter-clockwise
 
   digitalWrite(MOTOR_STBY_PIN, HIGH); //disable standby
 
@@ -492,6 +549,6 @@ void move(int speed, int direction){
 }
 
 void stop(){
-//enable standby  
+  //enable standby  
   digitalWrite(MOTOR_STBY_PIN, LOW);
 }

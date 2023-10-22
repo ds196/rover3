@@ -15,7 +15,7 @@ var outServo1 = 90;
 var outServo2 = 90;
 var outServo3 = 90;
 var outServo4 = 90;
-var outMotorS = 100; // 0-255
+var outMotorS = 255; // 0-255
 var outMotorD = 1;
 var outMotorStopped = false;
 const servoIncrement = 5;
@@ -89,10 +89,20 @@ $("document").ready(() => {
         console.log(`Recieved from pico: ${message.data}`);
         let textAlreadyThere = $("#txt-picoSerialLog").val(); // There should already be a newline at the end of textAlreadyThere
         $("#txt-picoSerialLog").val(textAlreadyThere + message.data);
-        if(message.data.startsWith("Temperature")) {
-            $("#txt-tpSensorData").val(message.data)
+        if(message.data.startsWith("Temp")) {
+            $("#txt-tpSensorData").val(message.data);
+        }
+        if(message.data.startsWith("Pressure")) {
+            let prevData = $("#txt-tpSensorData").val();
+            $("#txt-tpSensorData").val(prevData+message.data);
+        }
+        if(message.data.startsWith("Accel")) {
+            $("#txt-imuSensorData").val(message.data);
         }
     });
+
+    updateServoText();
+    updateMotorText();
 
     $("#btn-updateTP").click(() => {
         commandPub.publish({
@@ -116,6 +126,23 @@ $("document").ready(() => {
         updateServoText();
     });
 
+    $("#btn-closeClaw").click(() => {
+        outServo1 = 180;
+        setServos();
+        updateServoText();
+    });
+
+    $("#btn-openClaw").click(() => {
+        outServo1 = 0;
+        setServos();
+        updateServoText();
+    });
+
+    $("#btn-sendServos").click(() => {
+        setServos();
+        updateServoText();
+    });
+
     // Keydown
     $(document).on("keydown", (event) => {
         // if you press the z character key, the event.key returns z and event.code returns KeyZ
@@ -131,11 +158,11 @@ $("document").ready(() => {
                 switch(event.code) {
                     //Claw
                     case "KeyA":
-                        startServo(1, "-", servoIncrement, event.code);
+                        startServo(1, "+", servoIncrement, event.code);
                         //outServo1 -= servoIncrement;
                         break;
                     case "KeyZ":
-                        startServo(1, "+", servoIncrement, event.code);
+                        startServo(1, "-", servoIncrement, event.code);
                         //outServo1 += servoIncrement;
                         break;
                     //Wrist
@@ -217,7 +244,7 @@ $("document").ready(() => {
                     break;
                 case "ArrowDown":
                     outMotorS -= motorIncrement;
-                    if(outMotorS < 0) outMotorS = 0;
+                    if(outMotorS < 30) outMotorS = 30;
                     break;
                 case "ArrowLeft":
                     outMotorD = 1;
@@ -242,97 +269,6 @@ $("document").ready(() => {
             updateMotorText();
         }
         
-        
-        // Claw
-        /*if       (event.code == "KeyZ" && outServo1 - servoIncrement >= 75) {
-            outServo1 -= servoIncrement;
-            setServos();
-            updateServoText();
-        } 
-        //Wrist
-        else if (event.code == "KeyX" && outServo2 - servoIncrement >= 0) {
-            outServo2 -= servoIncrement;
-            setServos();
-            updateServoText();
-        }
-        //Elbow
-        else if (event.code == "KeyC" && outServo3 - servoIncrement >= 0){
-            outServo3 -= servoIncrement;
-            setServos();
-            updateServoText();
-        }
-        //Shoulder
-        else if (event.code == "KeyV" && outServo4 - servoIncrement >= 0){
-            outServo4 -= servoIncrement;
-            setServos();
-            updateServoText();
-        }
-
-        // Increase servo values
-
-        //Claw
-        if (event.code == "KeyA" && outServo1 + servoIncrement <= 180){
-            outServo1 += servoIncrement;
-            setServos();
-            updateServoText();
-        }
-        //Wrist
-        if (event.code == "KeyS" && outServo2 + servoIncrement <= 180){
-            outServo2 += servoIncrement;
-            setServos();
-            updateServoText();
-        }
-        //Elbow
-        if (event.code == "KeyD" && outServo3 + servoIncrement <= 180){
-            outServo3 += servoIncrement;
-            setServos();
-            updateServoText();
-        }
-        //Shoulder
-        if (event.code == "KeyF" && outServo4 + servoIncrement <= 180){
-            outServo4 += servoIncrement;
-            setServos();
-            updateServoText();
-        }*/
-
-
-
-        // Motor values
-
-        //Change speed
-        /*if (event.code == "ArrowUp" && outMotorS + motorIncrement <= 255){
-            outMotorS += motorIncrement;
-            updateMotorText();
-        }
-        if (event.code == "ArrowDown" && outMotorS - motorIncrement >= 10){
-            outMotorS -= motorIncrement;
-            updateMotorText();
-        }
-        //Direction
-        if ( (event.code == "ArrowRight" || event.code == "KeyJ")){
-            outMotorD = 2;
-            outMotorStopped = false;
-            updateMotorText();
-            commandPub.publish({
-                data: "setmotor " +  outMotorS + " " + outMotorD
-            });
-        }
-        if ( (event.code == "ArrowLeft" || event.code == "KeyG")){
-            outMotorD = 1;
-            outMotorStopped = false;
-            updateMotorText();
-            commandPub.publish({
-                data: "setmotor " +  outMotorS + " " + outMotorD
-            });
-        }
-        //Explicit stop
-        if (event.code == "KeyK") {
-            commandPub.publish({
-                data: "stopmotor"
-            });
-            outMotorStopped = true;
-            updateMotorText();
-        }*/
     });
 
     
@@ -372,22 +308,22 @@ $("document").ready(() => {
 
         //Enforce servo lims
         //Claw
-        if(outServo1 < 80) {
-            outServo1 = 80;
+        if(outServo1 < 1) {
+            outServo1 = 1;
         } else
         if(outServo1 > 180) {
             outServo1 = 180;
         }
         //Wrist
-        if(outServo2 < 0) {
-            outServo2 = 0;
+        if(outServo2 < 1) {
+            outServo2 = 1;
         } else
         if(outServo2 > 180) {
             outServo2 = 180
         }
         //Elbow
-        if(outServo3 < 0) {
-            outServo3 = 0;
+        if(outServo3 < 1) {
+            outServo3 = 1;
         } else
         if(outServo3 > 135) {
             outServo3 = 135;
@@ -422,8 +358,8 @@ $("document").ready(() => {
      */
     function setMotor() {
         //Enforce motor lims
-        if(outMotorS < 0) {
-            outMotorS = 0;
+        if(outMotorS < 30) {
+            outMotorS = 30;
         } else
         if(outMotorS > 255) {
             outMotorS = 255;
@@ -574,95 +510,3 @@ function radToDeg(rad) {
 Number.prototype.round = function(d) {
     return Math.round((this + Number.EPSILON)*(10**d))/(10**d);
 };
-
-
-
-/*document.addEventListener('keydown', (event) => {
-
-    // if you press the z character key, the event.key returns z and event.code returns KeyZ
-    console.log(`key=${event.key}, code=${event.code}`);
-    
-    // Decrease servo values
-    if (event.code == "KeyZ" && outServo1 - servoIncrement >= 75){
-        outServo1 -= servoIncrement;
-        commandPub.publish({
-            data: "setservo 1 " +  outServo1
-        }); // publishes updated value of servo1 to ROS2
-        document.getElementById("txt-servoPosData").innerHTML = "Servo 1: " + outServo1 + "\nServo 2: " + outServo2 + "\nServo 3: " + outServo3 + "\nServo 4: " + outServo4;
-    }
-    if (event.code == "KeyX" && outServo2 - servoIncrement >= 0){
-        outServo2 -= servoIncrement;
-        commandPub.publish({
-            data: "setservo 2 " +  outServo2}); 
-        document.getElementById("txt-servoPosData").innerHTML = "Servo 1: " + outServo1 + "\nServo 2: " + outServo2 + "\nServo 3: " + outServo3 + "\nServo 4: " + outServo4;
-    }
-    if (event.code == "KeyC" && outServo3 - servoIncrement >= 0){
-        outServo3 -= servoIncrement;
-        commandPub.publish({
-            data: "setservo 3 " +  outServo3});
-        document.getElementById("txt-servoPosData").innerHTML = "Servo 1: " + outServo1 + "\nServo 2: " + outServo2 + "\nServo 3: " + outServo3 + "\nServo 4: " + outServo4;
-    }
-    if (event.code == "KeyV" && outServo4 - servoIncrement >= 0){
-        outServo4 -= servoIncrement;
-        commandPub.publish({
-            data: "setservo 4 " +  outServo4});
-        document.getElementById("txt-servoPosData").innerHTML = "Servo 1: " + outServo1 + "\nServo 2: " + outServo2 + "\nServo 3: " + outServo3 + "\nServo 4: " + outServo4;
-    }
-    // Increase servo values
-    if (event.code == "KeyA" && outServo1 + servoIncrement <= 180){
-        outServo1 += servoIncrement;
-        commandPub.publish({
-            data: "setservo 1 " +  outServo1});
-        document.getElementById("txt-servoPosData").innerHTML = "Servo 1: " + outServo1 + "\nServo 2: " + outServo2 + "\nServo 3: " + outServo3 + "\nServo 4: " + outServo4;
-    }
-    if (event.code == "KeyS" && outServo2 + servoIncrement <= 180){
-        outServo2 += servoIncrement;
-        commandPub.publish({
-            data: "setservo 2 " +  outServo2});
-        document.getElementById("txt-servoPosData").innerHTML = "Servo 1: " + outServo1 + "\nServo 2: " + outServo2 + "\nServo 3: " + outServo3 + "\nServo 4: " + outServo4;
-    }
-    if (event.code == "KeyD" && outServo3 + servoIncrement <= 180){
-        outServo3 += servoIncrement;
-        commandPub.publish({
-            data: "setservo 3 " +  outServo3});
-        document.getElementById("txt-servoPosData").innerHTML = "Servo 1: " + outServo1 + "\nServo 2: " + outServo2 + "\nServo 3: " + outServo3 + "\nServo 4: " + outServo4;
-    }
-    if (event.code == "KeyF" && outServo4 + servoIncrement <= 180){
-        outServo4 += servoIncrement;
-        commandPub.publish({
-            data: "setservo 4 " +  outServo4});
-        document.getElementById("txt-servoPosData").innerHTML = "Servo 1: " + outServo1 + "\nServo 2: " + outServo2 + "\nServo 3: " + outServo3 + "\nServo 4: " + outServo4;
-    }
-    // Motor values
-    if (event.code == "ArrowUp" && outMotorS + motorIncrement <= 255){
-        outMotorS += motorIncrement;
-        commandPub.publish({
-            data: "setmotor " +  outMotorS + " " + outMotorD}); 
-        document.getElementById("txt-motorData").innerHTML = "Speed: " + outMotorS + "\nDirection: " + outMotorD;
-    }
-    if (event.code == "ArrowDown" && outMotorS - motorIncrement >= 0){
-        outMotorS -= motorIncrement;
-        commandPub.publish({
-            data: "setmotor " +  outMotorS + " " + outMotorD});
-        document.getElementById("txt-motorData").innerHTML = "Speed: " + outMotorS + "\nDirection: " + outMotorD;
-    }
-    if (event.code == "KeyJ") {
-        commandPub.publish({
-            data: "stopmotor"
-        });
-    }
-
-});*/
-
-/*document.addEventListener('keyup', (event) => {
-    if (event.code == "ArrowRight" && outMotorD == 1){
-        outMotorD = 2;
-        commandPub.publish("setmotor " +  outMotorS + " " + outMotorD);
-        document.getElementById("txt-motorData").innerHTML = "Speed: " + outMotorS + "\nDirection: " + outMotorD;
-    }
-    if (event.code == "ArrowLeft" && outMotorD == 2){
-        outMotorD = 1;
-        commandPub.publish("setmotor " +  outMotorS + " " + outMotorD);
-        document.getElementById("txt-motorData").innerHTML = "Speed: " + outMotorS + "\nDirection: " + outMotorD;
-    }
-});*/

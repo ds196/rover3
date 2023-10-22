@@ -50,6 +50,7 @@
     <div class="col-8">
         <h1 style="color: white; text-align: center;"><b>Controls</b></h1>
         <div class="row p-2">
+            <!--SEND TO PICO-->
             <div class="col-6 p-3" style="text-align: center;">
                 <div class="card" style="width:18rem;">
                     <div class="card-body"  id="cardbody-picoManualCommand">
@@ -61,15 +62,19 @@
                     </div>
                 </div>
             </div>
+            <!--BUTTONS-->
             <div class="col-6 p-3" style="text-align: left;"> 
                 <div class="row p-3">
                     <button type="button" id="btn-resetServos" class="btn btn-dark btn-lg">Reset</button>
                 </div>
                 <div class="row p-3">
-                    <button type="button" id="btn-dummyOpenLog" class="btn btn-dark btn-lg">Button for dummies</button>
+                    <button type="button" id="btn-closeClaw" class="btn btn-dark btn-lg">Close Claw</button>
                 </div>
                 <div class="row p-3">
-                    <button type="button" id="btn-dummydummyResetAll" class="btn btn-dark btn-lg">Dummy dummy</button>
+                    <button type="button" id="btn-openClaw" class="btn btn-dark btn-lg">Open Claw</button>
+                </div>
+                <div class="row p-3">
+                    <button type="button" id="btn-sendServos" class="btn btn-dark btn-lg">Send Servo Pos's</button>
                 </div>
             </div>
         </div>
@@ -93,11 +98,11 @@
                     <h1>Servos</h1>
                     
                     <!--These should probably be renamed later to "shoulder", "elbow", etc-->
-                    <textarea id="txt-servoPosData" rows="4" cols="17"
->Servo 1: 500
-Servo 2: 500
-Servo 3: 500
-Servo 4: 500</textarea>
+                    <textarea id="txt-servoPosData" rows="4" cols="20"
+>Claw: 500
+Wrist: 500
+Elbow: 500
+Shoulder: 500</textarea>
                 </body>
                 </div>
             </div>
@@ -110,9 +115,9 @@ Servo 4: 500</textarea>
                     <h1>Motor</h1>
                     
                     <!--These should probably be renamed later to "shoulder", "elbow", etc-->
-                    <textarea id="txt-motorData" rows="2" cols="17"
+                    <textarea id="txt-motorData" rows="2" cols="20"
 >Speed: 500
-Direction: clockwiseee</textarea>
+Direction: 12</textarea>
                 </body>
                 </div>
             </div>
@@ -125,10 +130,9 @@ Direction: clockwiseee</textarea>
                 <div class="card-body">
                 <body>
                     <h1>T&P</h1>
-                    <textarea id="txt-tpSensorData" rows="3" cols="17"
+                    <textarea id="txt-tpSensorData" rows="3" cols="20" readonly
 >Temp: 1000
-Pressure: 1000
-Approx. Alt: 1000</textarea>
+Pressure: 1000</textarea>
                     <button type="button" id="btn-updateTP" class="btn btn-dark">Update</button>
                 </body>
                 </div>
@@ -140,9 +144,8 @@ Approx. Alt: 1000</textarea>
                 <div class="card-body">
                 <body>
                     <h1>IMU</h1>
-                    <textarea id="txt-imuSensorData" rows="3" cols="17"
->Position: 1000
-Orientation: 1000</textarea>
+                    <textarea id="txt-imuSensorData" rows="3" cols="20" readonly
+>Accel: 500, 500, 500</textarea>
                     <button type="button" id="btn-updateIMU" class="btn btn-dark">Update</button>
                 </body>
                 </div>
