@@ -18,7 +18,7 @@ var outServo4 = 90;
 var outMotorS = 255; // 0-255
 var outMotorD = 1;
 var outMotorStopped = false;
-const servoIncrement = 5;
+const servoIncrement = 1;
 const motorIncrement = 20;
 
 let forward = 6;
@@ -167,20 +167,20 @@ $("document").ready(() => {
                         break;
                     //Wrist
                     case "KeyS":
-                        startServo(2, "-", servoIncrement, event.code);
+                        startServo(2, "-", servoIncrement*5, event.code);
                         //outServo2 -= servoIncrement;
                         break;
                     case "KeyX":
-                        startServo(2, "+", servoIncrement, event.code);
+                        startServo(2, "+", servoIncrement*5, event.code);
                         //outServo2 += servoIncrement;
                         break;
                     //Elbow
                     case "KeyD":
-                        startServo(3, "+", servoIncrement, event.code);
+                        startServo(3, "+", servoIncrement*2, event.code);
                         //outServo3 += servoIncrement;
                         break;
                     case "KeyC":
-                        startServo(3, "-", servoIncrement, event.code);
+                        startServo(3, "-", servoIncrement*2, event.code);
                         //outServo3 -= servoIncrement;
                         break;
                     //Shoulder
