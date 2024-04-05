@@ -158,43 +158,33 @@ $("document").ready(() => {
                 switch(event.code) {
                     //Claw
                     case "KeyA":
-                        startServo(1, "+", servoIncrement, event.code);
-                        //outServo1 -= servoIncrement;
+                        startServo(1, "+", servoIncrement*3, event.code);
                         break;
                     case "KeyZ":
-                        startServo(1, "-", servoIncrement, event.code);
-                        //outServo1 += servoIncrement;
+                        startServo(1, "-", servoIncrement*3, event.code);
                         break;
                     //Wrist
                     case "KeyS":
                         startServo(2, "-", servoIncrement*5, event.code);
-                        //outServo2 -= servoIncrement;
                         break;
                     case "KeyX":
                         startServo(2, "+", servoIncrement*5, event.code);
-                        //outServo2 += servoIncrement;
                         break;
                     //Elbow
                     case "KeyD":
                         startServo(3, "+", servoIncrement*2, event.code);
-                        //outServo3 += servoIncrement;
                         break;
                     case "KeyC":
                         startServo(3, "-", servoIncrement*2, event.code);
-                        //outServo3 -= servoIncrement;
                         break;
                     //Shoulder
                     case "KeyF":
-                        startServo(4, "+", servoIncrement, event.code);
-                        //outServo4 += servoIncrement;
+                        startServo(4, "+", servoIncrement*(2/3), event.code);
                         break;
                     case "KeyV":
-                        startServo(4, "-", servoIncrement, event.code);
-                        //outServo4 -= servoIncrement;
+                        startServo(4, "-", servoIncrement*(2/3), event.code);
                         break;
                 }
-                //setServos();
-                //updateServoText();
             }
         }
 
@@ -218,16 +208,20 @@ $("document").ready(() => {
                         up += kineIncrement;
                         break;
                 }
+                // Limits
                 if(up < 0) up = 0;
-                else if(up > 10) up = 11;
+                else if(up > 10) up = 10;
                 if(forward < 6) forward = 6;
                 else if(forward > 11) forward = 11;
+                //Trig
                 let angles = findAngles(forward, up);
                 console.log(`forward=${forward}, up=${up}, t1=${angles[0].round(1)}, t2=${angles[1].round(1)}`);
+                //Convert to numbers servos will understand
                 let shoulderAngle = radToDeg(angles[0]).round(1);
                 let elbowAngle = radToDeg(angles[1]).round(1);
-                outServo4 = 180-shoulderAngle; // 90+(90-shoulderAngle)
+                outServo4 = 90+(90-shoulderAngle)*(2/3); // 90+(90-shoulderAngle)
                 outServo3 = 90+(90-elbowAngle)*2;
+                
                 setServos();
                 updateServoText();
             }
@@ -461,21 +455,23 @@ $("document").ready(() => {
      * shoulder, elbow, wrist
      */
     function findAngles(x, y) {
-        let humerus = 5; //inches
-        let forearm = 7; //inches
+        let humerus = 5; //inches, a
+        let forearm = 7; //inches, b
     
         let t1=1000,t2=1000,t3=1000; //stupid values for debugging
     
         //Up and forward
-        if (x > 0 && y > 0) {let diag =  Math.sqrt(x**2 + y**2);
+        if (x > 0 && y > 0) {
+            let diag =  Math.sqrt(x**2 + y**2);
             let alpha = Math.atan(x/y);
             let beta =  Math.atan(y/x);
-            //A = Math.acos( (forearm**2 - humerus**2 + x**2 + y**2) / (2 * forearm * diag) );
-            //B = Math.asin( (forearm / humerus) * Math.sin(A) );
-            //D = Math.asin( (diag    / humerus) * Math.sin(A) );
-            let D = Math.acos( (humerus**2 + forearm**2 - diag**2) / (2*humerus*forearm) );
-            let A = Math.asin( (humerus/diag) * Math.sin(D) );
-            let B = Math.asin( (forearm/diag) * Math.sin(D) );
+            let A = Math.acos( (forearm**2 + diag**2 - humerus**2) / (2 * forearm * diag) );
+            let D = Math.acos( (humerus**2 + forearm**2 - diag**2) / (2 * humerus * forearm) );
+            let B = 180-A-D
+            //let B = Math.asin( (forearm / humerus) * Math.sin(A) );
+            //let D = Math.asin( (diag    / humerus) * Math.sin(A) );
+            //let A = Math.asin( (humerus/diag) * Math.sin(D) );
+            //let B = Math.asin( (forearm/diag) * Math.sin(D) );
     
             t1 = B + beta;
             t2 = D;
@@ -485,6 +481,11 @@ $("document").ready(() => {
             t2 = Math.acos( (forearm**2 + humerus**2 - x**2) / (2*forearm*humerus) );
             t1 = Math.asin( (forearm/x) * Math.sin(t2));
             t3 = Math.asin( (humerus/x) * Math.sin(t2));
+        //Nope
+        } else {
+            t1 = 90;
+            t2 = 90;
+            t3 = 90;
         }
         
         //t1 = shoulder, t2 = elbow, t3 = wrist
