@@ -6,6 +6,9 @@ Software for Rover team 3's Pico (embedded), Libre (ros2\_ws), and ground statio
 
 Also includes electrical documents, including schematics and planning layouts for soldering
 
+
 Software members: David (me), Alistair, and Anshika
+
 Electrical members: David (me), Faye
+
 Mechanical: August (team lead), Matthew, Matthew, Sarah
