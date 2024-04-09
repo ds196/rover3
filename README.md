@@ -1,14 +1,19 @@
-# Rover 3 Software
+# Rover Team 3
 
-2023 2-Month Rover Challenge Team 3 (A.S.T.R.A.)
+UAH SHC 2023 2-Month Rover Challenge Team 3 (A.S.T.R.A.)
 
-Software for Rover team 3's Pico (embedded), Libre (ros2\_ws), and ground station (gcs).
+Pico code: `embedded`
 
-Also includes electrical documents, including schematics and planning layouts for soldering
+Libre ROS node: `ros2_ws`
 
+Ground station: `gcs`
 
-Software members: David (me), Alistair, and Anshika
+Also includes `electrical` documents, including schematics and planning layouts for soldering
 
-Electrical members: David (me), Faye
+## Team members:
 
-Mechanical: August (team lead), Matthew, Matthew, Sarah
+**Software:** Alistair, David (me), and Anshika
+
+**Electrical:** David (me), Faye
+
+**Mechanical:** August (team lead), Matthew, Matthew, Sarah
